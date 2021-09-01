@@ -9,7 +9,7 @@ from import_export.admin import ImportExportModelAdmin
 class CalendarAdmin(ImportExportModelAdmin):
     fieldsets = (
         (None, {
-            'fields': ('day', 'rooms', 'price','updated')
+            'fields': ('day', 'HCLrooms', 'HCRrooms', 'HMrooms','HCLprice', 'HCRprice', 'HMprice','updated')
         }),
         ('Competencia', {
             'fields': ('NHprice', 'FyGprice', 'precio3stars')

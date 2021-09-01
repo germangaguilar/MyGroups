@@ -1,4 +1,5 @@
 from django.conf.urls import url
+from django.urls import path
 
 from . import views
 
@@ -9,8 +10,9 @@ urlpatterns = [
     url("listasolicitudes", views.SolicitudListView.as_view(), name='listasolicitudes'),
     #url("detallegrupo(?P<pk>\d+)$", views.InfoGrupoView.as_view(), name='detallegrupo'),
     #url("detallegrupo(?P<pk>\d+)$/actualizado", views.InfoGrupoView.as_view(), name='detallegrupo'),
-    url("calendario", views.calendarpage, name='calendarpage'),
+    #url("calendario", views.calendarpage, name='calendarpage'),
     url("calendario2", views.CalendarView.as_view(), name='calendarpage2'),
+    path("calendario<hotel>", views.calendarpage, name='calendarpage2'),
     url("nuevogrupo", views.nuevogrupo, name='nuevogrupo'),
     url("detallegrupo(?P<pk>\d+)$", views.infogrupo, name='detallegrupo'),
     url("solicitudgrupo(?P<pk>\d+)$", views.solicitudgrupo, name='solicitudgrupo'), #crea solicitud

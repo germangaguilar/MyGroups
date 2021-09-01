@@ -87,29 +87,14 @@ class Solicitud(models.Model):
         return super(Solicitud, self).save(*args, **kwargs)
 
     def get_absolute_url(self):
-        print('ey')
-        print(str(self.id))
+
         return reverse('detallesolicitud', kwargs={ 'pk': str(self.id)})
 
     def reserva_url(self):
-        print('ey')
-        print(str(self.id))
+
         return reverse('reservasolicitud', kwargs={ 'pk': str(self.id)})
 
-    def reservar(self, *args, **kwargs):
-        print()
-        self.status='R'
-        self.save()
-        pk=self.grupo.pk
 
-        grupo = Grupo.objects.get(pk=pk)
-
-        grupo.reservado = 'R'  # change field
-        grupo.save() # this will update only
-
-        #super(Solicitud, self).save(*args, **kwargs)
-        return reverse('detallegrupo', kwargs={ 'pk': pk})
-        #return super(Solicitud, self).save(*args, **kwargs)
 
 
 class Grupo(models.Model):
@@ -216,12 +201,20 @@ class Agencia(models.Model):
 
 class Calendar(models.Model):
     day = models.DateField()
-    price = models.IntegerField(blank=True)
-    FyGprice = models.IntegerField(default=0, blank=True)
-    NHprice = models.IntegerField(default=0, blank=True)
-    rooms = models.IntegerField(blank=True)
+
+    HCLprice = models.FloatField(default=0,blank=True)
+    HCRprice = models.FloatField(default=0,blank=True)
+    HMprice = models.FloatField(default=0,blank=True)
+    FyGprice = models.FloatField(default=0, blank=True)
+    NHprice = models.FloatField(default=0, blank=True)
+
+    HCLrooms = models.IntegerField(default=0,blank=True)
+    HCRrooms = models.IntegerField(default=0,blank=True)
+    HMrooms = models.IntegerField(default=0,blank=True)
+
     updated=models.DateTimeField()
     precio3stars=models.FloatField(blank=True)
+    #precio4stars=models.FloatField(blank=True)
 
 
     def formatday(self):
@@ -231,11 +224,61 @@ class Calendar(models.Model):
         date    = year+'-'+month+'-'+day
         return date
 
-    def dayprice(self):
-        price=str(self.price)
-        rooms=str(self.rooms)
-        dayprice = rooms+' '+price+'€'
-        return dayprice
+    def HCLdayprice(self):
+
+
+        HCLprice=str(int(self.HCLprice))
+
+        HCLrooms=str(self.HCLrooms)
+
+        HCLdayprice = HCLrooms+' '+HCLprice+'€'
+
+        return HCLdayprice
+
+    def HCRdayprice(self):
+
+
+        HCRprice=str(int(self.HCRprice))
+
+        HCRrooms=str(self.HCRrooms)
+
+        HCRdayprice = HCRrooms+' '+HCRprice+'€'
+
+        return HCRdayprice
+
+    def HMdayprice(self):
+
+
+        HMprice=str(int(self.HMprice))
+
+        HMrooms=str(self.HMrooms)
+
+        HMdayprice = HMrooms+' '+HMprice+'€'
+
+        return HMdayprice
+
+
+
+    def preturrooms(self):
+
+        HCLrooms=str(self.HCLrooms)
+        HMrooms=str(self.HMrooms)
+        HCRrooms=str(self.HCRrooms)
+
+        rooms = 'HM: '+HMrooms+'h '+'HCL: '+HCLrooms+'h '+'HCR: '+HCRrooms+'h'
+
+        return rooms
+
+    def preturprices(self):
+
+        HCLprice=str(self.HCLprice)
+        HMprice=str(self.HMprice)
+        HCRprice=str(self.HCRprice)
+
+        price = 'HM: '+HMprice+'€ '+'HCL: '+HCLprice+'€ '+'HCR: '+HCRprice+'€'
+
+        return price
+
 
 
 
@@ -243,14 +286,17 @@ class Calendar(models.Model):
         """
         String para representar el Objeto del Modelo
         """
-        return '%s %s %s (%s)' % (self.day,self.rooms, self.price,self.updated)
+        return '%s (%s)' % (self.day,self.updated)
 
     def save(self, *args, **kwargs):
 
         self.updated = timezone.now()
 
         if self.FyGprice >0 and self.NHprice >0:
-            self.precio3stars = (self.FyGprice + self.NHprice)/2
+            if self.FyGprice > self.NHprice *1.2:
+                self.precio3stars = self.NHprice *1.2
+            else:
+                self.precio3stars = (self.FyGprice + self.NHprice)/2
         elif self.FyGprice ==0 and self.NHprice >0:
             self.precio3stars = self.NHprice
         elif self.NHprice ==0 and self.FyGprice >0:

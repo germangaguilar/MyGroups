@@ -88,8 +88,16 @@
       events: [
         {% for calendar in calendarios %}
 
+
+        {% if hotel != 'PRETUR' %}
           {
-            title: '{{calendar.dayprice}}',
+            {% if hotel == 'HCL'%}
+            title: '{{calendar.HCLdayprice}}',
+            {% elif hotel == 'HM'%}
+            title: '{{calendar.HMdayprice}}',
+            {% elif hotel == 'HCR'%}
+            title: '{{calendar.HCRdayprice}}',
+            {% endif %}
             start: '{{calendar.formatday}}',
             end: '{{calendar.formatday}}',
             color: 'gray',
@@ -97,6 +105,33 @@
             sort:"0",
           },
 
+        {% elif hotel == 'PRETUR' %}
+        {
+          title: 'HM: {{calendar.HMdayprice}}',
+          start: '{{calendar.formatday}}',
+          end: '{{calendar.formatday}}',
+          color: 'gray',
+          textColor: 'green',
+          sort:"0",
+        },
+        {
+          title: 'HCL: {{calendar.HCLdayprice}}',
+          start: '{{calendar.formatday}}',
+          end: '{{calendar.formatday}}',
+          color: 'gray',
+          textColor: 'green',
+          sort:"0",
+        },
+        {
+          title: 'HCR: {{calendar.HCRdayprice}}',
+          start: '{{calendar.formatday}}',
+          end: '{{calendar.formatday}}',
+          color: 'gray',
+          textColor: 'green',
+          sort:"0",
+        },
+
+        {% endif %}
         {% endfor %}
 
         {

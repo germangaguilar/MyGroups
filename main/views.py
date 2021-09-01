@@ -9,19 +9,27 @@ from django.db import models
 from django.utils import timezone
 from django.urls import reverse
 
-def calendarpage(request):
+hoteles=['HCR', 'HCL', 'HM']
+def calendarpage(request, hotel):
     grupos = Grupo.objects.all()
 
 
-    calendarios=Calendar.objects.all()#filtraré el último
+    #calendarios=Calendar.objects.all()#filtraré el último
+
+    last_update = Calendar.objects.order_by('-updated')[0]
+    prueba=last_update.updated-datetime.timedelta(seconds=1)
+    calendarios = Calendar.objects.filter(updated__gt=prueba)
 
     reservados       = Grupo.objects.filter(reservado__exact='R')
     no_reservados    = Grupo.objects.filter(reservado__exact='N')
 
+
+    hotel = str(hotel) if hotel in hoteles else 'PRETUR'
+    print(hotel)
     return render(
         request,
         'calendarindex.html',
-        context={'grupos':grupos, 'calendarios': calendarios})
+        context={'grupos':grupos, 'calendarios': calendarios, 'hotel': hotel})
 
 def index(request):
     """
@@ -232,103 +240,125 @@ def reservasolicitud(request, pk):
         #return render(request, "reserva.html", context)
 
 def warnings(request):
+
     context={}
     last_update = Calendar.objects.order_by('-updated')[0]
     prueba=last_update.updated-datetime.timedelta(seconds=1)
     last_calendar = Calendar.objects.filter(updated__gt=prueba)
-    # it might be a good idea to inspect the result at this point
-    # to ensure you are deleting the right stuff
 
     warnings=[]
     bajoprecio = []
     abrirext = []
 
 
+    HCR={'hotel':'HCR'}
+    HM={'hotel':'HM'}
+    HCL={'hotel':'HCL'}
 
 
-
+    k=1
+    hoteles= [HCR, HCL, HM]
     for calendar in last_calendar:
-        print(calendar)
-        print(bajoprecio)
-        #-----CONDICIONES AQUÍ-----
-        #ocupacion
-        vacio=calendar.rooms <= 60
-        amedias= 60 < calendar.rooms <= 30
-        bastantelleno = 30 < calendar.rooms <= 10
-        ultimas= 10 < calendar.rooms <= 5
 
-        #precio
-        bajoplaza = calendar.price < calendar.precio3stars*0.875
+        diasrestantes = (calendar.day - timezone.now().date()).days
+
 
         #¿competencia está cerrando?
-        abiertos=2
+        abiertos3stars=2
         if calendar.NHprice ==0:
-            abiertos-=1
+            abiertos3stars-=1
         if calendar.FyGprice ==0:
-            abiertos-=1
+            abiertos3stars-=1
 
         #----COMPARACIONES AQUÍ----
         #abierto
         #me preocupa: mucha ocupación, ocupación acelerando, precio muy distinto, cambio brusco en precios competencia
-        if calendar.price != 0:
+        HCR['price']=calendar.HCRprice
+        HCR['rooms']=calendar.HCRrooms
+        HCL['price']=calendar.HCLprice
+        HCL['rooms']=calendar.HCLrooms
+        HM['price']=calendar.HMprice
+        HM['rooms']=calendar.HMrooms
 
-            #competencia cerrada y nosotros abiertos
-            if abiertos == 0:
-                bajoprecio.append(
-                    '%s: Competencia cerrada. Habs: %s Precio: %s' % (
+
+
+        for hotel in hoteles:
+
+
+            #-----CONDICIONES AQUÍ-----
+            #ocupacion
+            vacio=hotel['rooms'] <= 75 #(!)poner en función de la capacidad del hotel
+            amedias= 75 < hotel['rooms'] <= 30
+            bastantelleno = 30 < hotel['rooms'] <= 10
+            ultimas= 10 < hotel['rooms'] <= 5
+
+            bajoplaza = hotel['price'] < calendar.precio3stars*0.875
+
+            esteaño = calendar.day < datetime.date(year=2022,month=1,day=1)
+            compcerrada = abiertos3stars == 0
+
+            if hotel['price'] !=0: #abiertos
+
+
+                if compcerrada and esteaño and not vacio: #competencia cerrada y nosotros abiertos
+                    hotel["aviso{0}".format(k)] = '%s: ¿Subir precio? Competencia cerrada. Habs: %s Precio: %s' % (
+                        calendar.day,
+                        hotel['rooms'],
+                        hotel['price'])
+                        #(!)estudiar cuatro estrellas
+                        #(!)estudiar años anteriores
+                    k+=1
+
+
+
+                if bajoplaza:
+                    print('ey') #competencia abierta pero a precios superiores a los nuestros
+                    descuento = str(round(((1-hotel['price']/calendar.precio3stars)*100),2))+'%'
+                    #formatday = formatday()
+                    hotel["aviso{0}".format(k)] = '%s: ¿Subir precio? Precio inferior a plaza (-%s) %s: %s NH:%s FyG:%s Plaza:%s Habitaciones:%s Incremento:' % (calendar.day,
+                        descuento,
+                        hotel['hotel'],
+                        hotel['price'],
+                        calendar.NHprice,
+                        calendar.FyGprice,
+                        round(calendar.precio3stars,2),
+                        hotel['rooms'])
+                    print(hotel["aviso{0}".format(k)])
+                    k+=1
+
+            #cerrado
+            else:
+                #cerrado con ocupación baja
+
+
+                """
+                unmes = calendar.day < timezone.now()+datetime.timedelta(months=1)
+                unasemana = calendar.day < timezone.now()+datetime.timedelta(weeks=1)
+                tresdias = calendar.day < timezone.now()+datetime.timedelta(days=2)
+                mañana = calendar.day < timezone.now()+datetime.timedelta(days=1)
+                hoy = calendar.day == timezone.now()
+                """
+                #más fácil
+
+
+                condiciones= vacio or amedias and diasrestantes <= 30 or bastantelleno and diasrestantes <= 10 or ultimas and diasrestantes <=3
+
+                if condiciones: #quedan muchas habitaciones para el tiempo que falta
+                    hotel["aviso{0}".format(k)] = '%s: (%s días) Habs: %s Precio:%s NH:%s FyG:%s' % (
                     calendar.day,
-                    calendar.rooms,
-                    calendar.price))
-                    #(!)estudiar cuatro estrellas
-                    #(!)estudiar años anteriores
-
-
-
-            if bajoplaza:
-                descuento = str(round(((1-calendar.price/calendar.precio3stars)*100),2))+'%'
-                #formatday = formatday()
-                bajoprecio.append(
-                    '%s: (-%s) HCL: %s NH:%s FyG:%s Plaza:%s Habitaciones:%s Incremento:' % (calendar.day,
-                    descuento,
-                    calendar.price,
+                    diasrestantes,
+                    hotel['rooms'],
+                    hotel['price'],
                     calendar.NHprice,
-                    calendar.FyGprice,
-                    calendar.precio3stars,
-                    calendar.rooms))
+                    calendar.FyGprice)
+                    k+=1
 
-        #cerrado
-        else:
-            #cerrado con ocupación baja
-            vacio=calendar.rooms <= 60
-            amedias= 60 < calendar.rooms <= 30
-            bastantelleno = 30 < calendar.rooms <= 10
-            ultimas= 10 < calendar.rooms <= 5
-
-            """
-            unmes = calendar.day < timezone.now()+datetime.timedelta(months=1)
-            unasemana = calendar.day < timezone.now()+datetime.timedelta(weeks=1)
-            tresdias = calendar.day < timezone.now()+datetime.timedelta(days=2)
-            mañana = calendar.day < timezone.now()+datetime.timedelta(days=1)
-            hoy = calendar.day == timezone.now()
-            """
-            #más fácil
-            diasrestantes = (calendar.day - timezone.now().date()).days
-
-            condiciones= vacio or amedias and diasrestantes <= 30 or bastantelleno and diasrestantes <= 10 or ultimas and diasrestantes <=3
-
-            if condiciones:
-                abrirext.append('%s: (%s días) Habs: %s Precio:%s NH:%s FyG:%s' % (calendar.day,
-                diasrestantes,
-                calendar.rooms,
-                calendar.price,
-                calendar.NHprice,
-                calendar.FyGprice))
-
-    context['bajoprecio']=bajoprecio
+    #context['bajoprecio']=bajoprecio
 
 
-    print(bajoprecio)
-    print(abrirext)
+    print(list(HCL))
+    context['HCL']=list(HCL.values())[3:]
+
 
 
     return render(request, "warnings.html", context)

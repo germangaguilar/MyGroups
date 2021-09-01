@@ -4,13 +4,13 @@
 
     <h1>Lista grupos</h1>
 
-    {% if bajoprecio %}
+    {% if HCL %}
     <ul>
 
-      {% for warning in bajoprecio %}
+      {% for warning in HCL %}
       <li>
 
-        ({{warning}})
+        {{warning}}
       </li>
       {% endfor %}
 
