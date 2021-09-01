@@ -1,0 +1,21 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+    <h1>Lista grupos</h1>
+
+    {% if bajoprecio %}
+    <ul>
+
+      {% for warning in bajoprecio %}
+      <li>
+
+        ({{warning}})
+      </li>
+      {% endfor %}
+
+    </ul>
+    {% else %}
+      <p>Sin avisos para revisiones de precios.</p>
+    {% endif %}
+{% endblock %}

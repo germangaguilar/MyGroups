@@ -1,0 +1,163 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block content %}
+  <h1>Title: {{ grupo.title }}</h1>
+
+  <!-- <p><strong>Author:</strong> <a href="">{{ book.author }}</a></p> <!-- author detail link not yet defined -->
+  <p><strong>Entrada:</strong> {{ grupo.entrada }}</p>
+  <p><strong>Salida:</strong> {{ grupo.salida }}</p>
+  <p><strong>Salida:</strong> {{ grupo.pax}}</p>
+
+
+  <!--
+  <p><strong>Language:</strong> {{ book.language }}</p>
+  <p><strong>Genre:</strong> {% for genre in book.genre.all %} {{ genre }}{% if not forloop.last %}, {% endif %}{% endfor %}</p>-->
+
+  <div style="margin-left:20px;margin-top:20px">
+
+
+
+
+
+
+
+
+
+    <h4>Solicitudes</h4>
+
+    {% for solicitud in grupo.solicitud_set.all %}
+    <hr>
+    <p class="{% if solicitud.status == 'p' %}text-danger{% elif solicitud.status == 'm' %}text-danger{% else %}text-warning{% endif %}">{{ solicitud.get_status_display }}</p>
+    {% if solicitud.status != 'p' %}<p><strong>Due to be returned:</strong> {{solicitud.due_back}}</p>{% endif %}
+    <p><strong>Agencia:</strong> {{solicitud.agencia}}</p>
+    <p><strong>Recibida:</strong> {{solicitud.recibida}}</p>
+    <p class="text-muted"><strong>Id:</strong> {{solicitud.id}}</p>
+    {{solicitud.avgprice}}
+    <a href="{{ solicitud.get_absolute_url }}">Cotizar</a>
+    <a href="{% url 'reservasolicitud' pk=solicitud.pk %}">Reservar</a>
+    {% endfor %}
+  </div>
+
+  <div style="margin-left:20px;margin-top:20px">
+    <h4>Precios</h4>
+
+    {% for calendario in calendarios%}
+
+
+    {% if calendario.day >= grupo.entrada and calendario.day < grupo.salida %}
+    <p><strong>Día:</strong> {{calendario.day}}</p>
+    <p><strong>Habitaciones:</strong> {{calendario.rooms}}</p>
+    <p><strong>Precio:</strong> {{calendario.price}}</p>
+    <hr>
+    {% endif %}
+    {% endfor %}
+  </div>
+
+  <div class="container">
+    Vamoh a veh
+
+  </div>
+
+  <div id='calendar-container'>
+    <div id='calendar'></div>
+  </div>
+
+
+
+    <script src="{% static 'js/jquery-3.3.1.min.js' %}"></script>
+    <script src="{% static 'js/popper.min.js' %}"></script>
+    <script src="{% static 'js/bootstrap.min.js' %}"></script>
+
+    <script src="{% static 'fullcalendar/packages/core/main.js' %}"></script>
+    <script src="{% static 'fullcalendar/packages/interaction/main.js' %}"></script>
+    <script src="{% static 'fullcalendar/packages/daygrid/main.js' %}"></script>
+    <script src="{% static 'fullcalendar/packages/timegrid/main.js' %}"></script>
+    <script src="{% static 'fullcalendar/packages/list/main.js' %}"></script>
+
+
+
+
+
+
+
+
+    <script>
+      document.addEventListener('DOMContentLoaded', function() {
+    var calendarEl = document.getElementById('calendar');
+
+    var calendar = new FullCalendar.Calendar(calendarEl, {
+      plugins: [ 'interaction', 'dayGrid', 'timeGrid', 'list' ],
+      height: 'parent',
+      header: {
+        left: 'prev,next today',
+        center: 'title',
+        right: 'dayGridMonth,timeGridWeek,timeGridDay,listWeek'
+      },
+      defaultView: 'dayGridMonth',
+      defaultDate: '{{ grupo.formatentrada }}',
+      navLinks: true, // can click day/week names to navigate views
+      editable: true,
+      eventLimit: false, // allow "more" link when too many events
+
+
+
+      events: [
+        {% for calendar in calendarios %}
+
+          {
+            title: '{{calendar.dayprice}}',
+            start: '{{calendar.formatday}}',
+            end: '{{calendar.formatday}}',
+            color: 'gray',
+            textColor: 'green',
+            sort:"0",
+          },
+
+        {% endfor %}
+
+
+        {
+          title: 'Long Event',
+          start: '2021-08-07',
+          end: '2021-08-31',
+          sort:'3'
+        },
+        {% for otrogrupo in grupos %}
+
+            {%if grupo.title == otrogrupo.title %}
+              {
+                title: '{{grupo.title}}',
+                start: '{{grupo.formatentrada}}',
+                end: '{{grupo.formatsalida}}',
+                url: "detallegrupo{{grupo.id}}",
+                color: 'black',
+                sort:'1'
+              },
+            {%else %}
+              {
+                title: '{{otrogrupo.title}}',
+                start: '{{otrogrupo.formatentrada}}',
+                end: '{{otrogrupo.formatsalida}}',
+                url: "detallegrupo{{otrogrupo.id}}",
+                color: 'blue',
+                sort:'2'
+              },
+            {% endif %}
+        {% endfor %}
+
+    ],
+
+
+
+
+    });
+
+    calendar.render();
+  });
+
+    </script>
+
+    <script src="{% static 'js/main.js' %}"></script>
+
+{% endblock %}

@@ -1,0 +1,22 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block content %}
+
+  <h1>Nuevo grupo</h1>
+
+  <form  action= "{{ grupo.get_absolute_url }}" method="post">
+    {% csrf_token %}
+    {{form.as_p}}
+    <input type="submit" value="Registrar">
+  </form>
+
+  <script type="text/javascript" src="/admin/jsi18n/"></script>
+  <script type="text/javascript" src="/static/admin/js/core.js"></script>
+  <script type="text/javascript" src="/static/admin/js/admin/RelatedObjectLookups.js"></script>
+  <script type="text/javascript" src="/static/admin/js/jquery.min.js"></script>
+  <script type="text/javascript" src="/static/admin/js/jquery.init.js"></script>
+  <script type="text/javascript" src="/static/admin/js/actions.min.js"></script>
+  <script type="text/javascript" src="/static/admin/js/calendar.js"></script>
+  <script type="text/javascript" src="/static/admin/js/admin/DateTimeShortcuts.js"></script>
+{% endblock %}

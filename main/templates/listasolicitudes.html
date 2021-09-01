@@ -1,0 +1,19 @@
+{% extends "base.html" %}
+
+{% block content %}
+    <h1>Lista solicitudes</h1>
+
+    {% if solicitud_list %}
+    <ul>
+
+      {% for solicitud in solicitud_list %}
+      <li>
+        <a>{{ solicitud.id }}</a> 
+      </li>
+      {% endfor %}
+
+    </ul>
+    {% else %}
+      <p>There are no books in the library.</p>
+    {% endif %}
+{% endblock %}
