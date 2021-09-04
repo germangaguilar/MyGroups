@@ -2,8 +2,27 @@
 
 {% block content %}
 
-    <h1>Lista grupos</h1>
+    <h1>Avisos precios</h1>
+    <button class="button">Por hotel</button>
+    <button class="button">Por fecha</button>
+    <h2>Hotel Murrieta</h2>
+    {% if HM %}
+    <ul>
 
+      {% for warning in HM %}
+      <li>
+
+        {{warning}}
+      </li>
+      {% endfor %}
+
+    </ul>
+    {% else %}
+      <p>Sin avisos para el Murrieta.</p>
+
+    {% endif %}
+
+    <h2>Ciudad de Logroño</h2>
     {% if HCL %}
     <ul>
 
@@ -16,6 +35,26 @@
 
     </ul>
     {% else %}
-      <p>Sin avisos para revisiones de precios.</p>
+      <p>Sin avisos para el Ciudad.</p>
+
     {% endif %}
+
+    <h2>Hotel Carlton Rioja</h2>
+    {% if HCR %}
+    <ul>
+
+      {% for warning in HCR %}
+      <li>
+
+        {{warning}}
+      </li>
+      {% endfor %}
+
+    </ul>
+    {% else %}
+      <p>Sin avisos para el Carlton.</p>
+
+    {% endif %}
+
+
 {% endblock %}

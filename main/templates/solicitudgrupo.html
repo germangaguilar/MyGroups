@@ -31,7 +31,7 @@
 
     <h4>Solicitudes</h4>
 
-    {% for solicitud in grupo.solicitud_set.all %}
+    {% for solicitud in solicitudes %}
     <hr>
     <p class="{% if solicitud.status == 'p' %}text-danger{% elif solicitud.status == 'm' %}text-danger{% else %}text-warning{% endif %}">{{ solicitud.get_status_display }}</p>
     {% if solicitud.status != 'p' %}<p><strong>Due to be returned:</strong> {{solicitud.due_back}}</p>{% endif %}
@@ -40,6 +40,11 @@
     <p class="text-muted"><strong>Id:</strong> {{solicitud.id}}</p>
     {{solicitud.avgprice}}
     <a href="{{ solicitud.get_absolute_url }}">Cotizar</a>
+
+    {% for cotizacion in cotizaciones %}
+
+    {{cotizacion}}
+    {% endfor %}
     {% endfor %}
   </div>
 
@@ -163,5 +168,13 @@
     </script>
 
     <script src="{% static 'js/main.js' %}"></script>
+    <script type="text/javascript" src="/admin/jsi18n/"></script>
+    <script type="text/javascript" src="/static/admin/js/core.js"></script>
+    <script type="text/javascript" src="/static/admin/js/admin/RelatedObjectLookups.js"></script>
+    <script type="text/javascript" src="/static/admin/js/jquery.min.js"></script>
+    <script type="text/javascript" src="/static/admin/js/jquery.init.js"></script>
+    <script type="text/javascript" src="/static/admin/js/actions.min.js"></script>
+    <script type="text/javascript" src="/static/admin/js/calendar.js"></script>
+    <script type="text/javascript" src="/static/admin/js/admin/DateTimeShortcuts.js"></script>
 
 {% endblock %}

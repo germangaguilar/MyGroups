@@ -1,7 +1,7 @@
 from django.contrib import admin
 
 # Register your models here.
-from .models import  Agencia, Grupo, Solicitud, Calendar
+from .models import  Agencia, Grupo, Solicitud, Calendar, Cotizacion
 from import_export.admin import ImportExportModelAdmin
 
 
@@ -18,13 +18,15 @@ class CalendarAdmin(ImportExportModelAdmin):
     )
 
 admin.site.register(Agencia)
+admin.site.register(Cotizacion)
 
 # admin.site.register(Author)
 #admin.site.register(Genre)
 #admin.site.register(BookInstance)
 # Define the admin class
 
-
+class CotizacionInline(admin.TabularInline):
+    model = Cotizacion
 
 
 
@@ -35,20 +37,15 @@ class SolicitudAdmin(admin.ModelAdmin):
     fieldsets = (
         (None, {
             'fields': ('grupo', 'agencia',
-            'comentarios')
+            'comentarios', 'solicitudHCR','solicitudHCL','solicitudHM')
         }),
         ('Availability', {
             'fields': ('status', 'registrada')
         }),
-        ('Cotizacion', {
-            'fields': ('cotizacionSA',
-                'cotizacionHAB',
-                'cotizacionAD',
-                'cotizacionMP',
-                'cotizacionPC')
-        }),
 
     )
+
+    inlines=[CotizacionInline]
 
 
 

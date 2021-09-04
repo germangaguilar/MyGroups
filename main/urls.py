@@ -11,12 +11,13 @@ urlpatterns = [
     #url("detallegrupo(?P<pk>\d+)$", views.InfoGrupoView.as_view(), name='detallegrupo'),
     #url("detallegrupo(?P<pk>\d+)$/actualizado", views.InfoGrupoView.as_view(), name='detallegrupo'),
     #url("calendario", views.calendarpage, name='calendarpage'),
-    url("calendario2", views.CalendarView.as_view(), name='calendarpage2'),
-    path("calendario<hotel>", views.calendarpage, name='calendarpage2'),
+
+    path("calendario2?gruposHCR=gruposHCR", views.calendarpage, name='calendarpage2'),
+    path("calendario2", views.calendarpage, name='calendarpage'),
     url("nuevogrupo", views.nuevogrupo, name='nuevogrupo'),
-    url("detallegrupo(?P<pk>\d+)$", views.infogrupo, name='detallegrupo'),
+    path("detallegrupo<pk>", views.infogrupo, name='detallegrupo'),
     url("solicitudgrupo(?P<pk>\d+)$", views.solicitudgrupo, name='solicitudgrupo'), #crea solicitud
     url("detallesolicitud(?P<pk>\d+)$", views.cotizacion, name='detallesolicitud'), #cotización para solicitud
-    url("reservasolicitud(?P<pk>\d+)$", views.reservasolicitud, name='reservasolicitud'),    #confirma reserva solicitud
+    path("reservacotizacion<pk>", views.reservacotizacion, name='reservacotizacion'),    #confirma reserva solicitud
     url("warnings", views.warnings, name='warnings'),
 ]

@@ -32,6 +32,27 @@
   <div class="container">
     Vamoh a veh
 
+
+    <form  action="calendario2" method="get">
+    <!-- Choices-->
+    Festivos    <input type="checkbox" name="festivos" id="festivos" value="festivos" >
+    Grupos HCR     <input type="checkbox" name="grupos_HCR" id="grupos_HCR" value="grupos_HCR" >
+    Grupos HCL     <input type="checkbox" name="grupos_HCL" id="grupos_HCL" value="grupos_HCL" >
+    Grupos HM     <input type="checkbox" name="grupos_HM" id="grupos_HM" value="grupos_HM" >
+
+    Posibles    <input type="checkbox" name="grupos_quizas" id="grupos_quizas" value="grupos_quizas" >
+
+    Habs HCR     <input type="checkbox" name="habs_HCR" id="habs_HCR" value="habs_HCR" >
+    Habs HCL     <input type="checkbox" name="habs_HCL" id="habs_HCL" value="habs_HCL" >
+    Habs HM     <input type="checkbox" name="habs_HM" id="habs_HM" value="habs_HM" >
+
+    <!-- Submit-->
+    <input type="submit" value="submit">
+    </form>
+    {%if grupos_HCR%}
+    ola
+    {%endif%}
+
   </div>
   <div id='calendar-container'>
     <div id='calendar'></div>
@@ -50,15 +71,6 @@
     <script src="{% static 'fullcalendar/packages/list/main.js' %}"></script>
 
 
-    {% for grupo in grupos %}
-
-      {
-        title: {{grupo.name}},
-        start: {{grupo.entrada}},
-        end: {{grupo.salida}}
-      },
-
-    {% endfor %}
 
 
 
@@ -89,15 +101,10 @@
         {% for calendar in calendarios %}
 
 
-        {% if hotel != 'PRETUR' %}
+        {% if habs_HCR %}
           {
-            {% if hotel == 'HCL'%}
-            title: '{{calendar.HCLdayprice}}',
-            {% elif hotel == 'HM'%}
-            title: '{{calendar.HMdayprice}}',
-            {% elif hotel == 'HCR'%}
+
             title: '{{calendar.HCRdayprice}}',
-            {% endif %}
             start: '{{calendar.formatday}}',
             end: '{{calendar.formatday}}',
             color: 'gray',
@@ -105,58 +112,81 @@
             sort:"0",
           },
 
-        {% elif hotel == 'PRETUR' %}
-        {
-          title: 'HM: {{calendar.HMdayprice}}',
-          start: '{{calendar.formatday}}',
-          end: '{{calendar.formatday}}',
-          color: 'gray',
-          textColor: 'green',
-          sort:"0",
-        },
-        {
-          title: 'HCL: {{calendar.HCLdayprice}}',
-          start: '{{calendar.formatday}}',
-          end: '{{calendar.formatday}}',
-          color: 'gray',
-          textColor: 'green',
-          sort:"0",
-        },
-        {
-          title: 'HCR: {{calendar.HCRdayprice}}',
-          start: '{{calendar.formatday}}',
-          end: '{{calendar.formatday}}',
-          color: 'gray',
-          textColor: 'green',
-          sort:"0",
-        },
+        {% endif %}
+
+        {% if habs_HCL %}
+          {
+
+            title: '{{calendar.HCLdayprice}}',
+            start: '{{calendar.formatday}}',
+            end: '{{calendar.formatday}}',
+            color: 'gray',
+            textColor: 'green',
+            sort:"0",
+          },
+
+        {% endif %}
+
+        {% if habs_HM %}
+          {
+
+            title: '{{calendar.HMdayprice}}',
+            start: '{{calendar.formatday}}',
+            end: '{{calendar.formatday}}',
+            color: 'gray',
+            textColor: 'green',
+            sort:"0",
+          },
 
         {% endif %}
         {% endfor %}
 
-        {
-          title: 'Long Event',
-          start: '2021-08-07',
-          end: '2021-08-31',
-          sort:'1'
-        },
-        {
-          title: 'Long Event',
-          start: '2021-08-07',
-          end: '2021-08-31',
-          sort:'3'
-        },
-        {% for grupo in grupos %}
+
+
+
+
+
+        {% if grupos_HCR %}
+        {% for grupo in gruposHCR %}
 
           {
             title: '{{grupo.title}}',
             start: '{{grupo.formatentrada}}',
             end: '{{grupo.formatsalida}}',
-            color: 'blue',
+            color: '#A93226',
             sort:'2'
           },
 
         {% endfor %}
+        {% endif %}
+
+        {% if grupos_HCL %}
+        {% for grupo in gruposHCL %}
+
+          {
+            title: '{{grupo.title}}',
+            start: '{{grupo.formatentrada}}',
+            end: '{{grupo.formatsalida}}',
+            color: '#FF6400',
+            sort:'2'
+          },
+
+        {% endfor %}
+        {% endif %}
+
+        {% if grupos_HM %}
+        {% for grupo in gruposHM %}
+
+          {
+            title: '{{grupo.title}}',
+            start: '{{grupo.formatentrada}}',
+            end: '{{grupo.formatsalida}}',
+            color: '#0500AF',
+            sort:'2'
+          },
+
+        {% endfor %}
+        {% endif %}
 
     ],
 
@@ -171,5 +201,8 @@
     </script>
 
     <script src="{% static 'js/main.js' %}"></script>
+
+
+
   </body>
 </html>

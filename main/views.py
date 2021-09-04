@@ -1,6 +1,6 @@
 from django.shortcuts import render, get_object_or_404
-from .models import Agencia, Grupo, Solicitud, Calendar
-from .forms import SolicitudForm, GrupoForm, CotizacionForm
+from .models import Agencia, Grupo, Solicitud, Calendar, Cotizacion
+from .forms import SolicitudForm, GrupoForm, CotizacionForm, ReservaForm
 from django.views import generic
 from tablib import Dataset
 from django.http import HttpResponseRedirect
@@ -8,28 +8,45 @@ import datetime
 from django.db import models
 from django.utils import timezone
 from django.urls import reverse
+from django.core.exceptions import ValidationError
 
 hoteles=['HCR', 'HCL', 'HM']
-def calendarpage(request, hotel):
-    grupos = Grupo.objects.all()
+def calendarpage(request):
+
+    context={}
+    context['grupos'] = Grupo.objects.all()
 
 
     #calendarios=Calendar.objects.all()#filtraré el último
 
     last_update = Calendar.objects.order_by('-updated')[0]
     prueba=last_update.updated-datetime.timedelta(seconds=1)
-    calendarios = Calendar.objects.filter(updated__gt=prueba)
+    context['calendarios'] = Calendar.objects.filter(updated__gt=prueba)
 
-    reservados       = Grupo.objects.filter(reservado__exact='R')
-    no_reservados    = Grupo.objects.filter(reservado__exact='N')
+    #reservados       = Grupo.objects.filter(reservado__exact='R')
+    #no_reservados    = Grupo.objects.filter(reservado__exact='N')
+
+    context['gruposHCR'] = Grupo.objects.filter(reservado__exact='HCR')
+    context['gruposHCL'] = Grupo.objects.filter(reservado__exact='HCL')
+    context['gruposHM'] = Grupo.objects.filter(reservado__exact='HM')
+    context['gruposquizas'] = Grupo.objects.filter(reservado__exact='CER')
+    context['gruposqueno'] = Grupo.objects.filter(reservado__exact='CNR')
+    context['gruposnodisp'] = Grupo.objects.filter(reservado__exact='SD')
+    context['gruposnoatendidos'] = Grupo.objects.filter(reservado__exact='NA')
+
+    opciones= request.GET
 
 
-    hotel = str(hotel) if hotel in hoteles else 'PRETUR'
-    print(hotel)
+
+    for a in request.GET:
+        context[a]=opciones[a]
+
+
+
     return render(
         request,
         'calendarindex.html',
-        context={'grupos':grupos, 'calendarios': calendarios, 'hotel': hotel})
+        context)
 
 def index(request):
     """
@@ -141,20 +158,74 @@ def infogrupo(request, pk):
     context["grupo"] = Grupo.objects.get(id = pk)
     context['entrada']=Grupo.entrada
     context['salida']=Grupo.salida
+
+    context['solicitudes']=Solicitud.objects.filter(grupo = context["grupo"])
+
+
+    context['cotizaciones']= Cotizacion.objects.all()
+
+    for i in context['solicitudes']:
+
+        print(i.pk)
+        print(i)
+        print(Cotizacion.objects.filter(solicitud = i))
     #precios=Calendar.objects.filter(day__range=[entrada, salida])
 
     #avgprice = precios.annotate(total=Sum('price'))
     context['calendarios'] = Calendar.objects.all()
     context['grupos'] = Grupo.objects.all()
+
+    context['gruposHCR'] = Grupo.objects.filter(reservado='HCR')
+    context['gruposHCL'] = Grupo.objects.filter(reservado='HCL')
+    context['gruposHM'] = Grupo.objects.filter(reservado='HM')
+    context['gruposquizas'] = Grupo.objects.filter(reservado='CER')
+    context['gruposqueno'] = Grupo.objects.filter(reservado='CNR')
+    context['gruposnodisp'] = Grupo.objects.filter(reservado='SD')
+    context['gruposnoatendidos'] = Grupo.objects.filter(reservado='NA')
+
+    context['solicitudes_reservadas']   =context['solicitudes'].filter(status__exact='R')
+    context['solicitudes_quizas']       =context['solicitudes'].filter(status__exact='r')
+    context['solicitudes_nointeresados']=context['solicitudes'].filter(status__exact='d')
+    context['solicitudes_pendientes']   =context['solicitudes'].filter(status__exact='p')
+    context['solicitudes_sin_disp']     =context['solicitudes'].filter(status__exact='n')
+    context['solicitudes_anuladas']     =context['solicitudes'].filter(status__exact='A')
+
+    context['num_solicitudes_reservadas']   =context['solicitudes_reservadas'].count()
+    context['num_solicitudes_quizas']       =context['solicitudes_quizas'].count()
+    context['num_solicitudes_nointeresados']=context['solicitudes_nointeresados'].count()
+    context['num_solicitudes_pendientes']   =context['solicitudes_pendientes'].count()
+    context['num_solicitudes_sin_disp']     =context['solicitudes_sin_disp'].count()
+    context['num_solicitudes_anuladas']     =context['solicitudes_anuladas'].count()
+
     #context['avgprice'] = avgprice
     context['avgprice'] = Solicitud.avgprice
 
+    context['color'] = request.GET.get('color')
+
+    opciones= request.GET
+
+    #aver = [x for x in request.GET.values()]
+
+    for a in request.GET:
+        context[a]=opciones[a]
 
 
     return render(request, "detallegrupo.html", context)
 
 #como infogrupo, pero añade formulario para solicitud
 #(!) duplica mucho código (es igual que infogrupo), seguro que se puede hacer mejor
+
+
+def nuevogrupo(request):
+    context={}
+    form = GrupoForm(request.POST or None)
+    if form.is_valid():
+        form.save()
+        pk=Grupo.objects.last().pk
+        return HttpResponseRedirect(reverse("solicitudgrupo",kwargs={'pk': pk}) )
+    return render(request, 'nuevogrupo.html', {'form': form})
+
+
 def solicitudgrupo(request, pk):
         # dictionary for initial data with
     # field names as keys
@@ -185,53 +256,82 @@ def solicitudgrupo(request, pk):
 
     return render(request, 'solicitudgrupo.html', context)
 
-def nuevogrupo(request):
-    context={}
-    form = GrupoForm(request.POST or None)
-    if form.is_valid():
-        form.save()
-        pk=Grupo.objects.last().pk
-        return HttpResponseRedirect(reverse("solicitudgrupo",kwargs={'pk': pk}) )
-    return render(request, 'nuevogrupo.html', {'form': form})
-
-def nuevasolicitud(request, pk):
-    context={}
-    obj = get_object_or_404(Grupo, pk=pk)
-    form = SolicitudForm(request.POST or None, instance = obj)
-    return render(request, 'detallegrupo.html', {'form': form})
-
 def cotizacion(request, pk):
     context={}
 
 
-    obj = get_object_or_404(Solicitud, pk=pk)
+    solicitud = get_object_or_404(Solicitud, pk=pk)
     # pass the object as instance in form
-    form = CotizacionForm(request.POST or None, instance = obj)
-
+    form = CotizacionForm(request.POST or None)
         # save the data from the form and
     # redirect to detail_view
     if form.is_valid():
-        obj.status = 'r'
-        pkgrupo=obj.grupo.pk
-        form.save()
+
+        cotizacion=form.save(commit=False)
+        cotizacion.solicitud=solicitud
+        cotizacion.enviada=datetime.datetime.now()
+        cotizacion.save()
+        hotel=cotizacion.hotel
+
+        #aquí veo si la solicitud está completamente atendida o falta algún hotel
+        #(!)esto debería ir fuera, y funcionar también cada vez que altero la solicitud!!!!
+        hoteles=[('HCR', solicitud.solicitudHCR),
+            ('HM',solicitud.solicitudHM),
+            ('HCL',solicitud.solicitudHCL)]
+
+        cotizaciones = Cotizacion.objects.filter(solicitud=solicitud)
+
+        if solicitud.status=='R':
+            pass
+        else:
+            solicitud.status='r'
+
+            for a,b in hoteles:
+                if b:
+                    if not cotizaciones.filter(hotel=a):
+                        solicitud.status='p'
+
+
+        pkgrupo=solicitud.grupo.pk
+
+
+        solicitud.save()
+
         return HttpResponseRedirect(reverse("detallegrupo",kwargs={'pk': pkgrupo}) )
 
     # add form dictionary to context
     context["form"] = form
     return render(request, "cotizacion.html", context)
 
-def reservasolicitud(request, pk):
-        solicitud = get_object_or_404(Solicitud, pk=pk)
-        solicitud.status='R'
+def reservacotizacion(request, pk):
+
+    context={}
+    cotizacion = get_object_or_404(Cotizacion, pk=pk)
+    form = ReservaForm(request.POST or None, instance=cotizacion)
+    context['form']= form
+
+
+
+    solicitud = cotizacion.solicitud
+
+    grupo = solicitud.grupo
+
+    if form.is_valid():
+
+        solicitud.status = 'R'
+        grupo.reservado = cotizacion.hotel
+
+        pkgrupo=grupo.pk
+        cotizacion.reservada=True
+
         solicitud.save()
-        pk=solicitud.grupo.pk
+        grupo.save()
+        form.save()
+        return HttpResponseRedirect(reverse("detallegrupo",kwargs={'pk': pkgrupo}))
 
-        grupo = get_object_or_404(Grupo, pk=pk)
-        #grupo = Grupo.objects.get(pk=pk)
+    return render(request, 'reserva.html', context)
 
-        grupo.reservado = 'R'  # change field
-        grupo.save() # this will update only
-        return HttpResponseRedirect(reverse("detallegrupo",kwargs={'pk': pk}))
+    #return HttpResponseRedirect(reverse("reserva",kwargs={'pk': pk}))
         #super(Solicitud, self).save(*args, **kwargs)
         #return reverse('detallegrupo', kwargs={ 'pk': pk})
         #return super(Solicitud, self).save(*args, **kwargs)
@@ -243,8 +343,9 @@ def warnings(request):
 
     context={}
     last_update = Calendar.objects.order_by('-updated')[0]
-    prueba=last_update.updated-datetime.timedelta(seconds=1)
-    last_calendar = Calendar.objects.filter(updated__gt=prueba)
+    margen=last_update.updated-datetime.timedelta(seconds=10)
+    last_calendar = Calendar.objects.filter(updated__gt=margen)
+
 
     warnings=[]
     bajoprecio = []
@@ -294,7 +395,7 @@ def warnings(request):
 
             bajoplaza = hotel['price'] < calendar.precio3stars*0.875
 
-            esteaño = calendar.day < datetime.date(year=2022,month=1,day=1)
+            #esteaño = calendar.day < datetime.date(year=2022,month=1,day=1)
             compcerrada = abiertos3stars == 0
 
             if hotel['price'] !=0: #abiertos
@@ -353,11 +454,13 @@ def warnings(request):
                     calendar.FyGprice)
                     k+=1
 
-    #context['bajoprecio']=bajoprecio
+    context['bajoprecio']=bajoprecio
 
 
-    print(list(HCL))
+    print(list(HCL.values())[3:])
     context['HCL']=list(HCL.values())[3:]
+    context['HCR']=list(HCR.values())[3:]
+    context['HM']=list(HM.values())[3:]
 
 
 

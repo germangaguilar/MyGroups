@@ -1,5 +1,5 @@
 from django.forms import ModelForm
-from .models import Grupo, Solicitud
+from .models import Grupo, Solicitud, Cotizacion
 from django.contrib.admin.widgets import AdminDateWidget
 
 
@@ -15,7 +15,7 @@ class GrupoForm(ModelForm):
 class SolicitudForm(ModelForm):
     class Meta:
         model = Solicitud
-        fields = ['title','agencia', 'recibida', 'registrada']
+        fields = ['title','agencia', 'recibida', 'registrada', 'solicitudHM','solicitudHCL','solicitudHCR']
         widgets = {
             'recibida': AdminDateWidget(),
             'registrada': AdminDateWidget(),
@@ -23,5 +23,10 @@ class SolicitudForm(ModelForm):
 
 class CotizacionForm(ModelForm):
     class Meta:
-      model = Solicitud
-      fields = ['cotizacionSA', 'cotizacionAD', 'cotizacionMP', 'cotizacionPC', 'cotizacionHAB']
+      model = Cotizacion
+      fields = ['cotizacionSA', 'cotizacionAD', 'cotizacionMP', 'cotizacionPC', 'cotizacionHAB','hotel']
+
+class ReservaForm(ModelForm):
+    class Meta:
+        model = Cotizacion
+        fields= ['num_reserva']
