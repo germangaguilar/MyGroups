@@ -5,6 +5,33 @@
     <h1>Avisos precios</h1>
     <button class="button">Por hotel</button>
     <button class="button">Por fecha</button>
+
+    {%for day in dayswithwarnings%}
+
+
+
+    {%for calendar in calendario%}
+
+
+
+
+
+
+      {% for warning in HM %}
+
+        {%if warning.dia == calendar.day%}
+        <li>
+        {{warning}}
+        </li>
+        {%endif%}
+
+      {% endfor %}
+
+
+    {% endfor %}
+
+
+
     <h2>Hotel Murrieta</h2>
     {% if HM %}
     <ul>
@@ -55,6 +82,6 @@
       <p>Sin avisos para el Carlton.</p>
 
     {% endif %}
-
+    {% endfor %}
 
 {% endblock %}

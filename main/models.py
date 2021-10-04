@@ -15,18 +15,11 @@ class Solicitud(models.Model):
     grupo = models.ForeignKey('Grupo', on_delete=models.SET_NULL, null=True)
     agencia = models.ForeignKey('Agencia', on_delete=models.SET_NULL, null=True)
     calendario      = models.ForeignKey('Calendar', on_delete=models.SET_NULL, null=True, blank=True)
-    comentarios     = models.CharField(max_length=1000,blank=True)
+    comentarios     = models.TextField(blank=True)
     recibida = models.DateField()
     registrada = models.DateField()
-
-
-    #avgprice = models.FloatField(blank=True)
-
-    """
-    HCRavgprice = models.FloatField(blank=True)
-    HCLavgprice = models.FloatField(blank=True)
-    HMavgprice  = models.FloatField(blank=True)
-    """
+    asuntocorreo=models.CharField(blank=True, max_length=100)
+    correo=models.TextField(blank=True)
 
     LOAN_STATUS = (
         ('d', 'Cotizada pero no va a reservar'),
@@ -110,6 +103,10 @@ class Solicitud(models.Model):
 
         return reverse('reservasolicitud', kwargs={ 'pk': str(self.id)})
 
+    def contar(self):
+        num_cotizaciones = Cotizacion.objects.filter(solicitud=self).count()
+        return num_cotizaciones
+
 
 class Cotizacion(models.Model):
     solicitud=models.ForeignKey('Solicitud', on_delete=models.SET_NULL, null=True)
@@ -130,6 +127,9 @@ class Cotizacion(models.Model):
 
     hotel = models.CharField(max_length=3, choices=HOTELES, default='HM', help_text='Hotel que envía la solicitud',blank=True)
 
+    disponibilidad =models.BooleanField(default=True)
+
+
     enviada=models.DateTimeField(blank=True, null=True)
     reservada=models.BooleanField(default=False)
 
@@ -140,7 +140,7 @@ class Cotizacion(models.Model):
 class Grupo(models.Model):
 
 
-    title = models.CharField(max_length=400)
+    title = models.CharField(max_length=400, blank=True)
 
     #author = models.ForeignKey('Author', on_delete=models.SET_NULL, null=True)
     # ForeignKey, ya que un libro tiene un solo autor, pero el mismo autor puede haber escrito muchos libros.
@@ -160,18 +160,8 @@ class Grupo(models.Model):
     MP=models.BooleanField()
     PC=models.BooleanField()
 
-    enviada=models.DateField(default=datetime.date.today)
+    registrado=models.DateField(default=datetime.date.today)
 
-    """
-    REGIMEN_STATUS = (
-        ('NE', 'No especificado'),
-        ('SA', 'Solo alojamiento'),
-        ('MP', 'Media pensión'),
-        ('AD', 'Alojamiento y desayuno'),
-        ('PC', 'Pensión completa'),
-    )
-
-    regimen = models.CharField(max_length=2, choices=REGIMEN_STATUS, blank=True, default='NE', help_text='Régimen')"""
 
     BOOKING_STATUS = (
         ('HCR', 'Reservado en HCR'),
@@ -206,6 +196,9 @@ class Grupo(models.Model):
         date=year+'-'+month+'-'+day
         return date
 
+    def contarsolicitudes(self):
+        num_solicitudes = Solicitud.objects.filter(grupo=self).count()
+        return num_solicitudes
 
     def get_absolute_url(self):
 
@@ -218,11 +211,7 @@ class Grupo(models.Model):
         super(Grupo, self).save(*args, **kwargs)
         #return '%s' % (self.noche)
 
-"""class Cotizacion(models.Model):
-    solicitud       = models.OneToOneField(Solicitud, on_delete=models.CASCADE)
-    grupo           = models.ForeignKey(Grupo, on_delete=models.CASCADE)
 
-    comentarios     = models.CharField(max_length=1000,blank=True)"""
 
 class Agencia(models.Model):
     """
@@ -232,9 +221,7 @@ class Agencia(models.Model):
     nombre = models.CharField(max_length=200, unique=True)
 
     def __str__(self):
-        """
-        String que representa al objeto Book
-        """
+
         return self.nombre
 
 
@@ -291,7 +278,7 @@ class Calendar(models.Model):
     NHprice_lastweek=models.IntegerField(default=0,blank=True)
     NHprice_lastmonth=models.IntegerField(default=0,blank=True)
 
-    festivo=models.CharField(default='', max_length=30, blank=True)
+    diasem=models.CharField(default='', max_length=30, blank=True)
 
     updated=models.DateTimeField(blank=True,null=True)
     precio3stars=models.FloatField(blank=True)

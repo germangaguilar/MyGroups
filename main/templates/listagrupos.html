@@ -4,17 +4,45 @@
     <h1>Lista grupos</h1>
 
     {% if grupo_list %}
-    <ul>
 
-      {% for grupo in grupo_list %}
-      <li>
-        <a href="{{ grupo.get_absolute_url }}">{{ grupo.title }}</a> ({{grupo.title}})
-        ({{grupo.title}})
-      </li>
-      {% endfor %}
+    <table>
 
-    </ul>
+    <tr>
+      <th>Recibido</th>
+      <th>Grupo</th>
+      <th>ID</th>
+      <th>Agencia</th>
+      <th>Entrada</th>
+      <th>Salida</th>
+      <th>PAX</th>
+      <th>Regimen</th>
+      <th>Festivo</th>
+      <th>Estado</th>
+    </tr>
+
+    {% for grupo in grupo_list %}
+
+
+    <tr>
+      <td>{{grupo.registrado}}</td>
+      <td>{{grupo.title}}</td>
+      <td>{{grupo.pk}}</td>
+      <td>{{grupo.agencia}}</td>
+      <td>{{grupo.entrada}}</td>
+      <td>{{grupo.salida}}</td>
+      <td>{{grupo.pax}}</td>
+      <td>{{grupo.regimen}}</td>
+      <td>{{grupo.festivo}}</td>
+      <td>{{grupo.get_reservado_display}}</td>
+      <td><a href="{{ grupo.get_absolute_url }}">Ver grupo</a></td>
+    </tr>
+    {% endfor %}
+
+
+  </table>
+
     {% else %}
-      <p>There are no books in the library.</p>
+      <p>No hay grupos registrados.</p>
     {% endif %}
+
 {% endblock %}

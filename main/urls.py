@@ -20,4 +20,10 @@ urlpatterns = [
     url("detallesolicitud(?P<pk>\d+)$", views.cotizacion, name='detallesolicitud'), #cotización para solicitud
     path("reservacotizacion<pk>", views.reservacotizacion, name='reservacotizacion'),    #confirma reserva solicitud
     url("warnings", views.warnings, name='warnings'),
+    url("actualizado", views.actualizar, name='actualizar'),
+    path("sindisponibilidad<pk>", views.sindisponibilidad, name='sindisponibilidad'),
+    path("cotizacion<pk>", views.modificarcotizacion, name='cotizacion'),
+    path("modificargrupo<pk>", views.modificargrupo, name='modificargrupo'),
+    url("nuevaagencia", views.nuevaagencia, name = "nuevaagencia"),
+
 ]

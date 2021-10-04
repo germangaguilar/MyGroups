@@ -7,12 +7,13 @@
 
 <div class="row" style="display:flex; margin-right:20px">
   <div class="column" style="flex: 50%; margin-right:10px">
-    <h1>Title: {{ grupo.title }}</h1>
+
+    <h1>Grupo {{ grupo.pk }}: {{ grupo.title }}</h1>
 
     <!-- <p><strong>Author:</strong> <a href="">{{ book.author }}</a></p> <!-- author detail link not yet defined -->
     <p><strong>Entrada:</strong> {{ grupo.entrada }}</p>
     <p><strong>Salida:</strong> {{ grupo.salida }}</p>
-    <p><strong>Salida:</strong> {{ grupo.pax}}</p>
+    <p><strong>Personas:</strong> {{ grupo.pax}}</p>
 
     <table>
     <tr>
@@ -44,9 +45,11 @@
 
     {% if calendario.day >= grupo.entrada and calendario.day < grupo.salida %}
 
+    {{calendario.day}}
+
     <tr>
       <td>{{calendario.day}}</td>
-      <td>{{calendario.festivo}}</td>
+      <td>{{calendario.diasem}}</td>
       <td>{{calendario.HCRrooms}}</td>
       <td>{{calendario.HCLrooms}}</td>
       <td>{{calendario.HMrooms}}</td>
@@ -64,7 +67,9 @@
 
   </table>
 
-    <a href="{% url 'solicitudgrupo' grupo.pk  %}">Nueva solicitud</a>
+
+    <button class="button" type="button" name="Modificargrupo"><a href="{% url 'solicitudgrupo' grupo.pk  %}">Nueva solicitud</a></button>
+    <button class="button" type="button" name="Modificargrupo"><a href="{% url 'modificargrupo' grupo.pk  %}">Modificar grupo</a></button>
   </div> <!--termina primera columna-->
 
   <div class="column" style="flex: 49%;">
@@ -91,13 +96,95 @@
 
 
 
+    {% if grupo.contarsolicitudes == 1 %}
+    <h3>Solicitud:</h3>
 
+    {% for solicitud in solicitudes %}
+
+
+
+    <div class="row">
+      <table>
+      <tr>
+        <th>ID</th>
+        <th>Agencia</th>
+        <th>Recibida</th>
+        <th>Hoteles</th>
+        <td rowspan="2"><button class="button" type="button" name="Modificar">Modificar</button></td>
+        <td rowspan="2"><button class="button"  type="button" name="Modificar">      <a href="{{ solicitud.get_absolute_url }}">Cotizar</a></button></td>
+        <td rowspan="2"><button class="button"  type="button" name="Modificar">      <a href="{% url 'sindisponibilidad' pk=solicitud.pk %}"">Sin disponibilidad</a></button></td>
+      </tr>
+
+      <tr>
+        <td>{{solicitud.id}}</td>
+        <td>{{solicitud.agencia}}</td>
+        <td>{{solicitud.recibida}}</td>
+        <td>{% if solicitud.solicitudHCR %} HCR {%else%} {%endif%}
+          {% if solicitud.solicitudHCL %} HCL {%else%} {%endif%}
+          {% if solicitud.solicitudHM %} HM {%else%} {%endif%}
+        </td>
+      </tr>
+      </table>
+
+    </div>
+
+    {% if solicitud.contar > 0 %} <!-- si solicitud tiene cotizaciones -->
+    <h4>Cotizaciones:</h4>
+    {% for cotizacion in cotizaciones %}
+
+
+
+
+    {% if cotizacion.solicitud == solicitud %}
+
+    <table>
+
+    <tr>
+      {% if cotizacion.reservada %}
+      <td><p class="text-danger"><strong>Reservada</strong></p></td>
+      {% elif not cotizacion.disponibilidad %}
+      <td><p class="text-danger"><strong>Sin disponibilidad</strong></p></td>
+      {% else %}
+      <td><p class="text-danger"><strong>No reservada</strong></p></td>
+      {%endif%}
+      <td>{{cotizacion.id}}</td>
+      <td>{{cotizacion.hotel}}</td>
+      <td>{{cotizacion.enviada}}</td>
+      {%if cotizacion.cotizacionSA != 0 %}
+      <td>SA: {{cotizacion.cotizacionSA}}€/pax</td>
+      {% endif %}
+      {%if cotizacion.cotizacionAD != 0 %}
+      <td>AD: {{cotizacion.cotizacionAD}}€/pax</td>
+      {% endif %}
+      {%if cotizacion.cotizacionMP != 0 %}
+      <td>MP: {{cotizacion.cotizacionMP}}€/pax</td>
+      {% endif %}
+      {%if cotizacion.cotizacionPC != 0 %}
+      <td>PC: {{cotizacion.cotizacionPC}}€/pax</td>
+      {% endif %}
+    </tr>
+    </table>
+
+
+    <a href="">Eliminar</a>
+    <a href="{% url 'cotizacion' pk=cotizacion.pk %}">Modificar</a>
+    <a href="{% url 'reservacotizacion' pk=cotizacion.pk %}">Reservar</a>
+
+    {%endif%}
+
+      {% endfor %}<!--aquí termina de mirar cotizaciones-->
+    {%endif%} <!--si existen cotizaciones para esta solicitud-->
+
+      {% endfor %} <!--aquí termina de mirar solicitudes-->
+
+    {%else%} <!-- ¡el if que aparece cuando hay más de una solicitud! -->
 
 
     <h3>Solicitudes con reserva</h3>
     {% if num_solicitudes_reservadas > 0 %}
 
     {% for solicitud in solicitudes_reservadas %}
+
     <hr>
     <div class="row" style="margin-left:20px>
       <div class="column"><p class="text-muted"><strong>Id:</strong> {{solicitud.id}}</p></div>
@@ -105,6 +192,9 @@
       <div class="column"><p><strong>Recibida:</strong> {{solicitud.recibida}}</p></div>
       <a href="">Anular</a>
     </div>
+
+    {% if solicitud.contar > 0 %}
+
     <h4>Cotizaciones:</h4>
     {% for cotizacion in cotizaciones %}
 
@@ -138,11 +228,12 @@
     <a href="#">Editar</a>
     <a href="{% url 'reservacotizacion' pk=cotizacion.pk %}">Reservar</a>
 
-    {%endif%}
+  {%endif%}
 
-    {% endfor %}
+    {% endfor %}<!--aquí termina de mirar cotizaciones-->
+  {%endif%} <!--si existen cotizaciones para esta solicitud-->
 
-    {% endfor %}
+    {% endfor %} <!--aquí termina de mirar solicitudes-->
     {%else%}
 
     <p>Sin solicitudes reservadas</p>
@@ -153,19 +244,74 @@
     {% if num_solicitudes_pendientes > 0 %}
 
     {% for solicitud in solicitudes_pendientes %}
+
+
+
     <div class="row">
-      <div class="column"><p class="text-muted"><strong>Id:</strong> {{solicitud.id}}</p></div>
-      <div class="column"><p><strong>Agencia:</strong> {{solicitud.agencia}}</p></div>
-      <div class="column"><p><strong>Recibida:</strong> {{solicitud.recibida}}</p></div>
-      <a href="{{ solicitud.get_absolute_url }}">Cotizar</a>
-      <a href="">Anular</a>
-      <a href="">Modificar</a>
+      <table>
+      <tr>
+        <th>ID</th>
+        <th>Agencia</th>
+        <th>Recibida</th>
+        <th>Hoteles</th>
+        <td rowspan="2"><button class="button" type="button" name="Modificar">Modificar</button></td>
+        <td rowspan="2"><button class="button"  type="button" name="Modificar">      <a href="{{ solicitud.get_absolute_url }}">Cotizar</a></button></td>
+        <td rowspan="2"><button class="button"  type="button" name="Modificar">      <a href="{% url 'sindisponibilidad' pk=solicitud.pk %}"">Sin disponibilidad</a></button></td>
+      </tr>
+
+      <tr>
+        <td>{{solicitud.id}}</td>
+        <td>{{solicitud.agencia}}</td>
+        <td>{{solicitud.recibida}}</td>
+        <td>{% if solicitud.solicitudHCR %} HCR {%else%} {%endif%}
+          {% if solicitud.solicitudHCL %} HCL {%else%} {%endif%}
+          {% if solicitud.solicitudHM %} HM {%else%} {%endif%}
+        </td>
+      </tr>
+      </table>
+
     </div>
 
+    {% if solicitud.contar > 0 %} <!-- si solicitud tiene cotizaciones -->
     <h4>Cotizaciones:</h4>
     {% for cotizacion in cotizaciones %}
 
+
+
+
     {% if cotizacion.solicitud == solicitud %}
+
+    <table>
+
+    <tr>
+      {% if cotizacion.reservada %}
+      <td><p class="text-danger"><strong>Reservada</strong></p></td>
+      {% elif not cotizacion.disponibilidad %}
+      <td><p class="text-danger"><strong>Sin disponibilidad</strong></p></td>
+      {% else %}
+      <td><p class="text-danger"><strong>No reservada</strong></p></td>
+      {%endif%}
+      <td>{{cotizacion.id}}</td>
+      <td>{{cotizacion.hotel}}</td>
+      <td>{{cotizacion.enviada}}</td>
+      {%if cotizacion.cotizacionSA != 0 %}
+      <td>SA: {{cotizacion.cotizacionSA}}€/pax</td>
+      {% endif %}
+      {%if cotizacion.cotizacionAD != 0 %}
+      <td>AD: {{cotizacion.cotizacionAD}}€/pax</td>
+      {% endif %}
+      {%if cotizacion.cotizacionMP != 0 %}
+      <td>MP: {{cotizacion.cotizacionMP}}€/pax</td>
+      {% endif %}
+      {%if cotizacion.cotizacionPC != 0 %}
+      <td>PC: {{cotizacion.cotizacionPC}}€/pax</td>
+      {% endif %}
+    </tr>
+    </table>
+
+    {% if not cotizacion.disponibilidad %}
+    <p>Sin disponibilidad</p>
+    {% endif %}
 
     <div class="row">
       {% if cotizacion.reservada %}
@@ -189,15 +335,22 @@
       <div class="column"><p><strong>MP:</strong> {{cotizacion.cotizacionPC}}€/pax</p></div>
       {% endif %}
 
+      {%if cotizacion.cotizacionHAB != 0 %}
+      <div class="column"><p><strong>HAB:</strong> {{cotizacion.cotizacionHAB}}€/hab</p></div>
+      {% endif %}
+
     </div>
     <a href="">Eliminar</a>
     <a href="">Modificar</a>
     <a href="{% url 'reservacotizacion' pk=cotizacion.pk %}">Reservar</a>
 
     {%endif%}
-    {% endfor %}
-    {% endfor %}
-    {%else%}
+
+      {% endfor %}<!--aquí termina de mirar cotizaciones-->
+    {%endif%} <!--si existen cotizaciones para esta solicitud-->
+
+      {% endfor %} <!--aquí termina de mirar solicitudes-->
+    {%else%} <!--si no existen solicitudes pendientes-->
 
     <p>Sin solicitudes pendientes de respuesta</p>
     {%endif%}
@@ -215,7 +368,7 @@
       <a href="">Anular</a>
       <a href="">Modificar</a>
     </div>
-
+    {% if solicitud.contar > 0 %} <!-- si solicitud tiene cotizaciones -->
     <h4>Cotizaciones:</h4>
     {% for cotizacion in cotizaciones %}
 
@@ -248,20 +401,194 @@
     <a href="">Modificar</a>
     <a href="{% url 'reservacotizacion' pk=cotizacion.pk %}">Reservar</a>
 
-
-
     {%endif%}
 
-    {% endfor %}
+      {% endfor %}<!--aquí termina de mirar cotizaciones-->
+    {%endif%} <!--si existen cotizaciones para esta solicitud-->
 
-    <button type="button" name="Nueva cotizacion"></button>
-    {%endfor%}
-
-    {%else%}
+      {% endfor %} <!--aquí termina de mirar solicitudes-->
+    {%else%} <!--si no existen solicitudes pendientes-->
 
     <p>Sin solicitudes esperando reserva</p>
 
     {%endif%}
+
+    <h3>Solicitudes cotizadas, no reservan</h3>
+
+    {% if num_solicitudes_nointeresados > 0 %}
+
+    {% for solicitud in solicitudes_nointeresados %}
+    <div class="row">
+      <div class="column"><p class="text-muted"><strong>Id:</strong> {{solicitud.id}}</p></div>
+      <div class="column"><p><strong>Agencia:</strong> {{solicitud.agencia}}</p></div>
+      <div class="column"><p><strong>Recibida:</strong> {{solicitud.recibida}}</p></div>
+      <a href="{{ solicitud.get_absolute_url }}">Cotizar</a>
+      <a href="">Anular</a>
+      <a href="">Modificar</a>
+    </div>
+    {% if solicitud.contar > 0 %} <!-- si solicitud tiene cotizaciones -->
+    <h4>Cotizaciones:</h4>
+    {% for cotizacion in cotizaciones %}
+
+    {% if cotizacion.solicitud == solicitud %}
+
+    <div class="row">
+      {% if cotizacion.reservada %}
+      <div class="column"><p class="text-danger"><strong>Reservada</strong></p></div>
+      {% else %}
+      <div class="column"><p class="text-warning"><strong>No reservada</strong></p></div>
+      {%endif%}
+      <div class="column"><p class="text-muted"><strong>Id:</strong> {{cotizacion.id}}</p></div>
+      <div class="column"><p><strong>Hotel:</strong> {{cotizacion.hotel}}</p></div>
+      <div class="column"><p><strong>Enviada:</strong> {{cotizacion.enviada}}</p></div>
+      {%if cotizacion.cotizacionSA != 0 %}
+      <div class="column"><p><strong>SA:</strong> {{cotizacion.cotizacionSA}}€/pax</p></div>
+      {% endif %}
+      {%if cotizacion.cotizacionAD != 0 %}
+      <div class="column"><p><strong>AD:</strong> {{cotizacion.cotizacionAD}}€/pax</p></div>
+      {% endif %}
+      {%if cotizacion.cotizacionMP != 0 %}
+      <div class="column"><p><strong>MP:</strong> {{cotizacion.cotizacionMP}}€/pax</p></div>
+      {% endif %}
+      {%if cotizacion.cotizacionPC != 0 %}
+      <div class="column"><p><strong>MP:</strong> {{cotizacion.cotizacionPC}}€/pax</p></div>
+      {% endif %}
+
+    </div>
+    <a href="">Eliminar</a>
+    <a href="">Modificar</a>
+    <a href="{% url 'reservacotizacion' pk=cotizacion.pk %}">Reservar</a>
+
+    {%endif%}
+
+      {% endfor %}<!--aquí termina de mirar cotizaciones-->
+    {%endif%} <!--si existen cotizaciones para esta solicitud-->
+
+      {% endfor %} <!--aquí termina de mirar solicitudes-->
+    {%else%} <!--si no existen solicitudes pendientes-->
+
+    <p>Sin solicitudes cotizadas no interesadas.</p>
+
+    {%endif%}
+
+    <h3>Solicitudes sin disponibilidad</h3>
+
+    {% if num_solicitudes_sin_disp > 0 %}
+
+    {% for solicitud in solicitudes_sin_disp %}
+    <div class="row">
+      <div class="column"><p class="text-muted"><strong>Id:</strong> {{solicitud.id}}</p></div>
+      <div class="column"><p><strong>Agencia:</strong> {{solicitud.agencia}}</p></div>
+      <div class="column"><p><strong>Recibida:</strong> {{solicitud.recibida}}</p></div>
+      <a href="{{ solicitud.get_absolute_url }}">Cotizar</a>
+      <a href="">Anular</a>
+      <a href="">Modificar</a>
+    </div>
+    {% if solicitud.contar > 0 %} <!-- si solicitud tiene cotizaciones -->
+    <h4>Cotizaciones:</h4>
+    {% for cotizacion in cotizaciones %}
+
+    {% if cotizacion.solicitud == solicitud %}
+
+    <div class="row">
+      {% if cotizacion.reservada %}
+      <div class="column"><p class="text-danger"><strong>Reservada</strong></p></div>
+      {% else %}
+      <div class="column"><p class="text-warning"><strong>No reservada</strong></p></div>
+      {%endif%}
+      <div class="column"><p class="text-muted"><strong>Id:</strong> {{cotizacion.id}}</p></div>
+      <div class="column"><p><strong>Hotel:</strong> {{cotizacion.hotel}}</p></div>
+      <div class="column"><p><strong>Enviada:</strong> {{cotizacion.enviada}}</p></div>
+      {%if cotizacion.cotizacionSA != 0 %}
+      <div class="column"><p><strong>SA:</strong> {{cotizacion.cotizacionSA}}€/pax</p></div>
+      {% endif %}
+      {%if cotizacion.cotizacionAD != 0 %}
+      <div class="column"><p><strong>AD:</strong> {{cotizacion.cotizacionAD}}€/pax</p></div>
+      {% endif %}
+      {%if cotizacion.cotizacionMP != 0 %}
+      <div class="column"><p><strong>MP:</strong> {{cotizacion.cotizacionMP}}€/pax</p></div>
+      {% endif %}
+      {%if cotizacion.cotizacionPC != 0 %}
+      <div class="column"><p><strong>MP:</strong> {{cotizacion.cotizacionPC}}€/pax</p></div>
+      {% endif %}
+
+    </div>
+    <a href="">Eliminar</a>
+    <a href="">Modificar</a>
+    <a href="{% url 'reservacotizacion' pk=cotizacion.pk %}">Reservar</a>
+
+    {%endif%}
+
+      {% endfor %}<!--aquí termina de mirar cotizaciones-->
+    {%endif%} <!--si existen cotizaciones para esta solicitud-->
+
+      {% endfor %} <!--aquí termina de mirar solicitudes-->
+    {%else%} <!--si no existen solicitudes pendientes-->
+
+    <p>Sin solicitudes sin disponibilidad.</p>
+
+    {%endif%}
+
+    <h3>Solicitudes anuladas</h3>
+
+    {% if num_solicitudes_anuladas > 0 %}
+
+    {% for solicitud in solicitudes_anuladas %}
+    <div class="row">
+      <div class="column"><p class="text-muted"><strong>Id:</strong> {{solicitud.id}}</p></div>
+      <div class="column"><p><strong>Agencia:</strong> {{solicitud.agencia}}</p></div>
+      <div class="column"><p><strong>Recibida:</strong> {{solicitud.recibida}}</p></div>
+      <a href="{{ solicitud.get_absolute_url }}">Cotizar</a>
+      <a href="">Anular</a>
+      <a href="">Modificar</a>
+    </div>
+    {% if solicitud.contar > 0 %} <!-- si solicitud tiene cotizaciones -->
+    <h4>Cotizaciones:</h4>
+    {% for cotizacion in cotizaciones %}
+
+    {% if cotizacion.solicitud == solicitud %}
+
+    <div class="row">
+      {% if cotizacion.reservada %}
+      <div class="column"><p class="text-danger"><strong>Reservada</strong></p></div>
+      {% else %}
+      <div class="column"><p class="text-warning"><strong>No reservada</strong></p></div>
+      {%endif%}
+      <div class="column"><p class="text-muted"><strong>Id:</strong> {{cotizacion.id}}</p></div>
+      <div class="column"><p><strong>Hotel:</strong> {{cotizacion.hotel}}</p></div>
+      <div class="column"><p><strong>Enviada:</strong> {{cotizacion.enviada}}</p></div>
+      {%if cotizacion.cotizacionSA != 0 %}
+      <div class="column"><p><strong>SA:</strong> {{cotizacion.cotizacionSA}}€/pax</p></div>
+      {% endif %}
+      {%if cotizacion.cotizacionAD != 0 %}
+      <div class="column"><p><strong>AD:</strong> {{cotizacion.cotizacionAD}}€/pax</p></div>
+      {% endif %}
+      {%if cotizacion.cotizacionMP != 0 %}
+      <div class="column"><p><strong>MP:</strong> {{cotizacion.cotizacionMP}}€/pax</p></div>
+      {% endif %}
+      {%if cotizacion.cotizacionPC != 0 %}
+      <div class="column"><p><strong>MP:</strong> {{cotizacion.cotizacionPC}}€/pax</p></div>
+      {% endif %}
+
+    </div>
+    <a href="">Eliminar</a>
+    <a href="">Modificar</a>
+    <a href="{% url 'reservacotizacion' pk=cotizacion.pk %}">Reservar</a>
+
+    {%endif%}
+
+      {% endfor %}<!--aquí termina de mirar cotizaciones-->
+    {%endif%} <!--si existen cotizaciones para esta solicitud-->
+
+      {% endfor %} <!--aquí termina de mirar solicitudes-->
+    {%else%} <!--si no existen solicitudes pendientes-->
+
+    <p>Sin solicitudes anuladas.</p>
+
+    {%endif%} <!--existen o no solicitudes pendientes-->
+
+    {%endif%} <!-- ¡el if que aparece cuando hay más de una solicitud! -->
+
 
 
 
@@ -306,28 +633,97 @@
 
       events: [
 
-        {% for otrogrupo in grupos %}
+        {
+          title: '{{grupo.title}}',
+          start: '{{grupo.formatentrada}}',
+          end: '{{grupo.formatsalida}}',
+          url: "detallegrupo{{grupo.id}}",
+          color: 'black',
+          sort:'1'
+        },
 
-            {%if grupo.title == otrogrupo.title %}
+        {% for grupo in gruposHM %}
+
               {
                 title: '{{grupo.title}}',
                 start: '{{grupo.formatentrada}}',
                 end: '{{grupo.formatsalida}}',
                 url: "detallegrupo{{grupo.id}}",
-                color: 'black',
-                sort:'1'
-              },
-            {%else %}
-              {
-                title: '{{otrogrupo.title}}',
-                start: '{{otrogrupo.formatentrada}}',
-                end: '{{otrogrupo.formatsalida}}',
-                url: "detallegrupo{{otrogrupo.id}}",
-                color: 'blue',
+                color: 'red',
                 sort:'2'
               },
-            {% endif %}
         {% endfor %}
+
+        {% for grupo in gruposHCR %}
+
+              {
+                title: '{{grupo.title}}',
+                start: '{{grupo.formatentrada}}',
+                end: '{{grupo.formatsalida}}',
+                url: "detallegrupo{{grupo.id}}",
+                color: 'blue',
+                sort:'3'
+              },
+        {% endfor %}
+
+        {% for grupo in gruposHCL %}
+
+              {
+                title: '{{grupo.title}}',
+                start: '{{grupo.formatentrada}}',
+                end: '{{grupo.formatsalida}}',
+                url: "detallegrupo{{grupo.id}}",
+                color: 'orange',
+                sort:'3'
+              },
+        {% endfor %}
+
+        {% for grupo in gruposquizas %}
+
+              {
+                title: '{{grupo.title}}',
+                start: '{{grupo.formatentrada}}',
+                end: '{{grupo.formatsalida}}',
+                url: "detallegrupo{{grupo.id}}",
+                color: 'darkgray',
+                sort:'4'
+              },
+        {% endfor %}
+        {% for grupo in gruposnodisp %}
+
+              {
+                title: '{{grupo.title}}',
+                start: '{{grupo.formatentrada}}',
+                end: '{{grupo.formatsalida}}',
+                url: "detallegrupo{{grupo.id}}",
+                color: 'gray',
+                sort:'5'
+              },
+        {% endfor %}
+
+        {% for grupo in gruposqueno %}
+
+              {
+                title: '{{grupo.title}}',
+                start: '{{grupo.formatentrada}}',
+                end: '{{grupo.formatsalida}}',
+                url: "detallegrupo{{grupo.id}}",
+                color: 'yellow',
+                sort:'6'
+              },
+        {% endfor %}
+        {% for grupo in gruposnoatendidos %}
+
+              {
+                title: '{{grupo.title}}',
+                start: '{{grupo.formatentrada}}',
+                end: '{{grupo.formatsalida}}',
+                url: "detallegrupo{{grupo.id}}",
+                color: 'pink',
+                sort:'7'
+              },
+        {% endfor %}
+
 
     ],
 

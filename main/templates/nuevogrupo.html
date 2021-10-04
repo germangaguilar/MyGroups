@@ -5,11 +5,65 @@
 
   <h1>Nuevo grupo</h1>
 
-  <form  action= "{{ grupo.get_absolute_url }}" method="post">
-    {% csrf_token %}
-    {{form.as_p}}
-    <input type="submit" value="Registrar">
-  </form>
+  <div class="row" style="display:flex; margin-right:20px">
+    <div class="column" style="flex: 40%; margin-right:10px">
+      <div class="row" style="margin-bottom:10px" >
+          <h3>Detalles grupo:</h3>
+      </div>
+      <div class="row">
+
+        <!--action= "{{ grupo.get_absolute_url }}"-->
+      <form  method="post">
+        {% csrf_token %}
+        <table>
+          {{formgrupo.as_table}}
+        </table>
+
+      </div>
+
+    </div><!--termina primeta columna-->
+
+        <div class="column" style="flex: 59%;">
+          <div class="row" style="margin-bottom:10px" >
+              <h3>Detalles solicitud:</h3>
+          </div>
+          <div class="row">
+              <table>
+                <tr>
+                  <td>Agencia:</td>
+                  <td>{{ form.agencia }} <a href="{% url 'nuevaagencia'  %}">Crear nueva</a></td>
+                </tr>
+                <tr>
+                  <td>Recibida:</td>
+                  <td>{{ form.recibida }}</td>
+                </tr>
+                <tr>
+                  <td>Hotel:</td>
+                  <td>HM: {{ form.solicitudHM }} HCL: {{ form.solicitudHCL }} HCR: {{ form.solicitudHCR }}</td>
+                </tr>
+
+              </table>
+              <div class="form-group" >
+                Comentarios:
+              {{ form.comentarios }}
+              </div>
+            </div>
+
+
+          <h3 style="margin-top:20px">Correo electrónico</h3>
+          <div class="form-group">
+          <p>Asunto: </p>{{ form.asuntocorreo }}
+          </div>
+          <div class="form-group">
+          {{ form.correo }}
+          <input class="btn btn-primary" type="submit" value="Submit">
+          </div>
+        </div><!--termina segunda columna-->
+        </form><!--termina form-->
+      </div><!--termina fila-->
+
+
+
 
   <script type="text/javascript" src="/admin/jsi18n/"></script>
   <script type="text/javascript" src="/static/admin/js/core.js"></script>

@@ -42,10 +42,15 @@ class SolicitudAdmin(admin.ModelAdmin):
         ('Availability', {
             'fields': ('status', 'registrada')
         }),
+        ('Correo', {
+            'fields': ('asuntocorreo','correo',)
+        }),
 
     )
 
     inlines=[CotizacionInline]
+
+
 
 
 
